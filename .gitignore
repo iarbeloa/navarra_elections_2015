@@ -1,13 +1,34 @@
-# History files
-.Rhistory
-.Rapp.history
+# Set working directory and desired nuber of simulations
+setwd("Desktop/run4")
+number_of_simulations <-10000
+tabla_estimacion_cruda <- data.frame(porcentaje_upn = rnorm(number_of_simulations,mean=23.7,sd=2.69), porcentaje_psn = rnorm(number_of_simulations,mean=11.8,sd=1.91), porcentaje_pp = rnorm(number_of_simulations,mean=6.1,sd=0.79), porcentaje_cs = rnorm(number_of_simulations,mean=5.9,sd=2.85), porcentaje_podemos = rnorm(number_of_simulations,mean=17,sd=2.65), porcentaje_bildu = rnorm(number_of_simulations,mean=13.5,sd=0.96), porcentaje_gbai = rnorm(number_of_simulations,mean=14.3,sd=3.78), porcentaje_ie = rnorm(number_of_simulations,mean=3.9,sd=1.07), porcentaje_otros = rnorm(number_of_simulations,mean=1.3,sd=1.21), porcentaje_blanco = rnorm(number_of_simulations,mean=2.6,sd=0.23))
+tabla_estimacion_cruda[tabla_estimacion_cruda<0]<-0
+write.csv(tabla_estimacion_cruda, "tabla_estimacion_cruda.csv")
+denominador_ajuste <- tabla_estimaciones$porcentaje_upn + tabla_estimaciones$porcentaje_psn + tabla_estimaciones$porcentaje_pp + tabla_estimaciones$porcentaje_cs + tabla_estimaciones$porcentaje_podemos + tabla_estimaciones$porcentaje_bildu + tabla_estimaciones$porcentaje_gbai + tabla_estimaciones$porcentaje_ie + tabla_estimaciones$porcentaje_otros + tabla_estimaciones$porcentaje_blanco
+multiplicador_ajuste <- 100/factor_ajuste
+tabla_estimacion_voto <- tabla_estimacion_cruda * multiplicador_ajuste
+write.csv(tabla_estimacion_voto, "tabla_estimacion_voto.csv")
+tabla_estimacion_voto_ajustada <-tabla_estimacion_voto
+tabla_estimacion_voto_ajustada[tabla_estimacion_voto_ajustada<3]<-0
+tabla_estimacion_voto_ajustada$porcentaje_otros <- NULL
+tabla_estimacion_voto_ajustada$porcentaje_blanco <- NULL
+write.csv(tabla_estimacion_voto_ajustada, "tabla_estimacion_voto_ajustada.csv")
+dHont <- function( candidates, votes, seats ){ 
+  tmp <- data.frame( 
+    candidates = rep( candidates, each = seats ), 
+    scores     = as.vector(sapply( votes, function(x) x / 
+                                     1:seats )) 
+  ) 
+  tmp <- tmp$candidates[order( - tmp$scores )] [1:seats] 
+  table(tmp) 
+} 
+estimaciones_escanos <- apply(tabla_estimacion_voto_ajustada,1, function(x) dHont(c("UPN", "PSN", "PP", "Ciudadanos", "Podemos", "EHBildu", "GBai", "IE"), x, 50))
+write.csv(estimaciones_escanos, "estimaciones_escanos.csv")
+tabla_estimacion_escanos <- data.frame(t(estimaciones_escanos))
+tabla_estimacion_escanos <- tabla_estimacion_escanos[,c("UPN", "Podemos",  "GBai", "EHBildu", "PSN", "Ciudadanos", "PP", "IE")]
 
-# Example code in package build process
-*-Ex.R
+h = hist(tabla_estimacion_escanos$GBai+ tabla_estimacion_escanos$EHBildu + tabla_estimacion_escanos$Podemos + tabla_estimacion_escanos$IE)
+h$density = h$counts/sum(h$counts)*100
+plot(h,freq=F, ylab="Porcentaje", xlab="Escaños", main="Suma Podemos+GBai+Bildu+I-E")
 
-# RStudio files
-.Rproj.user/
 
-# produced vignettes
-vignettes/*.html
-vignettes/*.pdf
